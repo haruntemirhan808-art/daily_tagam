@@ -1,0 +1,17 @@
+name: daily_tagam_frontend
+description: "The frontend mobile application for DailyTagam."
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.4.0                  # For robust HTTP networking
+  flutter_secure_storage: ^9.0.0 # For safely storing JWT access tokens
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
