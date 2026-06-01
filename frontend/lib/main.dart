@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:daily_tagam_frontend/presentation/screens/customer/customer_profile_screen.dart'; 
-
-// --- Theme ---
 import 'core/theme/app_theme.dart';
-
-// --- Customer Screens ---
 import 'presentation/screens/auth_screen.dart';
-import 'presentation/screens/preferences_screen.dart'; // Handles PreferencesScreen
-import 'presentation/screens/customer_feed_screen.dart'; // Handles CustomerFeedScreen
+import 'presentation/screens/preferences_screen.dart';
+import 'presentation/screens/customer/app_layout.dart';
 
+// --- Temporary Stubs for Prototype Routes ---
 class StubScreen extends StatelessWidget {
   final String title;
   const StubScreen({super.key, required this.title});
@@ -17,7 +13,7 @@ class StubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Center(child: Text('$title Page\n(Coming Soon)')),
+      body: Center(child: Text('$title Page\n(Coming Soon)', textAlign: TextAlign.center)),
     );
   }
 }
@@ -34,19 +30,27 @@ class DailyTagamApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Daily Tagam',
-      theme: AppTheme.customerTheme,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.customerTheme, // Applies your new global CSS variables
       initialRoute: '/auth',
       routes: {
         // --- AUTH & ONBOARDING ---
         '/auth': (context) => const AuthScreen(),
         '/preferences': (context) => const PreferencesScreen(),
 
-        // --- CUSTOMER FLOWS ---
-        '/feed': (context) => const CustomerFeedScreen(),
-        '/profile': (context) => const CustomerProfileScreen(),
-        '/explore': (context) => const StubScreen(title: 'Explore Deals'),
+        // --- CUSTOMER FLOWS (Wrapped in Bottom Nav) ---
+        '/feed': (context) => const AppLayout(), 
         
-        // --- ROOT FALLBACK ---
+        // --- SECONDARY SCREENS ---
+        '/explore': (context) => const StubScreen(title: 'Explore Deals'),
+        '/cart': (context) => const StubScreen(title: 'My Cart'),
+        '/rewards': (context) => const StubScreen(title: 'Rewards'),
+        '/notifications': (context) => const StubScreen(title: 'Notifications'),
+        '/eco-impact': (context) => const StubScreen(title: 'Eco Impact'),
+        '/all-deals': (context) => const StubScreen(title: 'All Deals'),
+        '/all-restaurants': (context) => const StubScreen(title: 'Nearby Restaurants'),
+        
+        // --- FALLBACK ---
         '/': (context) => const AuthScreen(),
       },
     );
