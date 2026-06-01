@@ -26,26 +26,28 @@ class AuthRepository {
   }
 
   /// Logs in a user and safely secures their JWT locally
-  Future<bool> login(String email, String password) async {
-    try {
-      final response = await apiClient.dio.post(
-        '/auth/login',
-        data: {
-          'username': email, // FastAPI OAuth2 expects 'username' field
-          'password': password,
-        },
-        options: Options(contentType: Headers.formUrlEncodedContentType),
-      );
+  Future<String?> login(String email, String password) async {
+      try {
+        final response = await apiClient.dio.post(
+          '/auth/login',
+          data: {
+            'username': email,
+            'password': password,
+          },
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final token = response.data['access_token'];
-        await apiClient.storage.write(key: 'access_token', value: token);
-        return true;
+        if (response.statusCode == 200 && response.data != null) {
+          final token = response.data['access_token'];
+          final role = response.data['role']; // <-- Parse out the role string
+          
+          await apiClient.storage.write(key: 'access_token', value: token);
+          return role; // <-- Return the user role ('customer' or 'business')
+        }
+        return null;
+      } catch (e) {
+        return null;
       }
-      return false;
-    } catch (e) {
-      return false;
-    }
   }
 
   // Inside your API/Auth repository class:

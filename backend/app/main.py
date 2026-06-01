@@ -45,7 +45,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = security.create_access_token(data={"sub": str(user.id), "role": user.role})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role}
 
 
 # --- CUSTOMER ENDPOINTS ---
@@ -60,7 +60,7 @@ def save_user_preferences(
     db: Session = Depends(get_db)
 ):
     """
-    Saves a customer's selected food categories to personalize their marketplace feed.
+    Saves a customer's selected food categories to the PostgreSQL database.
     """
     if not payload.categories:
         raise HTTPException(
@@ -68,12 +68,17 @@ def save_user_preferences(
             detail="At least one food category preference must be chosen."
         )
     
-    # This matches your uploaded JSON dictionary logic seamlessly
+    # 1. Assign the Flutter array to the new JSON database column
+    current_user.preferences = payload.categories
+    
+    # 2. Save the changes permanently to PostgreSQL
+    db.commit()
+    db.refresh(current_user)
+    
     return {
-        "message": "Preferences updated successfully!",
+        "message": "Preferences saved to database successfully!",
         "customer_id": current_user.id,
-        "email": current_user.email,
-        "saved_categories": payload.categories
+        "saved_categories": current_user.preferences
     }
 
 @app.post("/users/me/upload")
@@ -87,6 +92,33 @@ def upload_customer_info(
         "customer_id": current_user.id,
         "email": current_user.email,
         "uploaded_data": payload
+    }
+
+@app.get("/users/me/profile")
+def get_customer_profile(
+    current_user: user_models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Fetches the profile info, impact figures, and saved metrics for the current customer.
+    """
+    # Parse out a clean display name from their registration email
+    display_name = current_user.email.split("@")[0].capitalize()
+    
+    # Calculate their impact metric based on real database records
+    # For now, we mock 14 meals saved (5.6kg waste reduction) until your orders table is filled with data
+    meals_saved = 14
+    waste_saved_kg = round(meals_saved * 0.4, 1) # Each meal rescued avoids roughly 0.4kg of food waste
+    money_saved_tenge = meals_saved * 1200        # Estimated savings based on average platform discounts
+    
+    return {
+        "name": display_name,
+        "email": current_user.email,
+        "meals_saved": meals_saved,
+        "waste_saved_kg": waste_saved_kg,
+        "money_saved": f"₸{money_saved_tenge:,}",
+        "bonus_points": meals_saved * 50, # Every saved meal awards 50 points
+        "preferences": current_user.preferences or []
     }
 
 @app.get("/offers", response_model=List[food_offer_schemas.FoodOfferResponse])
@@ -128,6 +160,44 @@ def reserve_food_offer(
     db.commit()
     db.refresh(db_order)
     return db_order
+
+@app.get("/users/me/dashboard")
+def get_customer_dashboard(
+    current_user: user_models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Fetches the dynamic dashboard context for the logged-in customer.
+    """
+    # 1. Generate a display name from the email (e.g., "kharun@email.com" -> "Kharun")
+    display_name = current_user.email.split("@")[0].capitalize()
+    
+    # 2. Fetch up to 5 real registered businesses from your users table
+    businesses = db.query(user_models.User).filter(user_models.User.role == "business").limit(5).all()
+    
+    # 3. Format the active restaurants
+    nearby_restaurants = []
+    for biz in businesses:
+        # Count how many active deals this specific business currently has
+        active_deals = db.query(food_offer_models.FoodOffer).filter(
+            food_offer_models.FoodOffer.business_id == biz.id, 
+            food_offer_models.FoodOffer.is_active,
+            food_offer_models.FoodOffer.quantity_available > 0
+        ).count()
+        
+        nearby_restaurants.append({
+            "id": biz.id,
+            "name": f"{biz.email.split('@')[0].capitalize()} Restaurant",
+            "distance": "0.5 km", # Static placeholder until geospatial PostGIS is added
+            "rating": 4.8,        # Static placeholder until review system is built
+            "active_deals": active_deals
+        })
+
+    return {
+        "name": display_name,
+        "meals_saved": 14, # Static integer until you start tracking completed order history
+        "nearby_restaurants": nearby_restaurants
+    }
 
 
 # --- BUSINESS ENDPOINTS ---
