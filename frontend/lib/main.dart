@@ -3,6 +3,7 @@ import 'core/theme/app_theme.dart';
 import 'presentation/screens/auth_screen.dart';
 import 'presentation/screens/preferences_screen.dart';
 import 'presentation/screens/customer/app_layout.dart';
+import 'presentation/screens/customer/customer_settings_screen.dart';
 
 // --- Temporary Stubs for Prototype Routes ---
 class StubScreen extends StatelessWidget {
@@ -49,6 +50,7 @@ class DailyTagamApp extends StatelessWidget {
         '/eco-impact': (context) => const StubScreen(title: 'Eco Impact'),
         '/all-deals': (context) => const StubScreen(title: 'All Deals'),
         '/all-restaurants': (context) => const StubScreen(title: 'Nearby Restaurants'),
+        '/settings': (context) => const CustomerSettingsScreen(),
         
         // --- FALLBACK ---
         '/': (context) => const AuthScreen(),

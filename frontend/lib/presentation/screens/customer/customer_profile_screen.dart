@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -32,12 +33,13 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       final response = await _apiClient.dio.get('/users/me/profile');
       if (response.statusCode == 200 && mounted) {
         setState(() {
-          _name = response.data['name'];
-          _email = response.data['email'];
-          _mealsSaved = response.data['meals_saved'];
-          _wasteSaved = double.tryParse(response.data['waste_saved_kg'].toString()) ?? 0.0;
-          _moneySaved = response.data['money_saved'];
-          _bonusPoints = response.data['bonus_points'];
+          // Added null safety checks to fix your console error!
+          _name = response.data['name']?.toString() ?? "User";
+          _email = response.data['email']?.toString() ?? "";
+          _mealsSaved = response.data['meals_saved'] ?? 0;
+          _wasteSaved = double.tryParse(response.data['waste_saved_kg']?.toString() ?? '0') ?? 0.0;
+          _moneySaved = response.data['money_saved']?.toString() ?? "₸0";
+          _bonusPoints = response.data['bonus_points'] ?? 0;
           _isLoading = false;
         });
       }
@@ -47,57 +49,56 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
   }
 
-  // Prototype Visual Theme Palette
-  final Color _orange = const Color(0xFFFF8A00);
-  final Color _textMain = const Color(0xFF1A1A2E);
-  final Color _textSec = const Color(0xFF64748B);
-  final Color _border = const Color(0xFFE2E8F0);
-  final Color _bg = const Color(0xFFF8F9FA);
-
   @override
   Widget build(BuildContext context) {
-    String initials = _name.length >= 2 ? _name.substring(0, 2).toUpperCase() : "MX";
+    String initials = _name.length >= 2 ? _name.substring(0, 2).toUpperCase() : "US";
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppTheme.cBg,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
+              padding: const EdgeInsets.fromLTRB(20, 56, 20, 100), // Clears the BottomNav
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('My Profile', style: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.w800, color: _textMain)),
+                  Text('My Profile', style: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.cTextMain)),
                   const SizedBox(height: 16),
 
-                  // Profile Info Card Header
+                  // --- PROFILE HERO CARD ---
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      gradient: const LinearGradient(colors: [Color(0xFFFFF8F0), Color(0xFFF0FDF4)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 20)],
                     ),
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 36,
-                          backgroundColor: _orange,
-                          child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                        Container(
+                          width: 72, height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(colors: [AppTheme.cOrange, Color(0xFFFF6B00)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            boxShadow: [BoxShadow(color: AppTheme.cOrange.withAlpha(70), blurRadius: 24, offset: const Offset(0, 8))],
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(height: 12),
-                        Text(_name, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: _textMain)),
-                        Text(_email, style: TextStyle(fontSize: 13, color: _textSec)),
-                        const SizedBox(height: 20),
+                        Text(_name, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.cTextMain)),
+                        const SizedBox(height: 4),
+                        Text(_email, style: const TextStyle(fontSize: 13, color: AppTheme.cTextSec)),
+                        const SizedBox(height: 16),
                         
-                        // Impact Statistics Row
+                        // Impact Grid
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatItem(_mealsSaved.toString(), "Meals Saved"),
-                            _buildStatItem("${_wasteSaved}kg", "Waste Saved"),
-                            _buildStatItem(_moneySaved, "Saved Money"),
+                            _buildImpactStat(_mealsSaved.toString(), "Meals Saved"),
+                            const SizedBox(width: 10),
+                            _buildImpactStat("${_wasteSaved}kg", "Waste Saved"),
+                            const SizedBox(width: 10),
+                            _buildImpactStat(_moneySaved, "Saved Money"),
                           ],
                         )
                       ],
@@ -105,44 +106,53 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Gamified Rewards Points Card
+                  // --- BONUS POINTS CARD ---
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFFF8A00), Color(0xFFFF6B00)]),
+                      gradient: const LinearGradient(colors: [AppTheme.cOrange, Color(0xFFFF6B00)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // FIX: Changed from Colors.whiteBF to a valid translucent white style
-                        Text('🌟 Bonus Points', style: TextStyle(color: Colors.white.withAlpha(190), fontSize: 13, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 2),
+                        Text('🌟 Bonus Points', style: TextStyle(color: Colors.white.withAlpha(230), fontSize: 13, fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 4),
                         Text('$_bonusPoints pts', style: GoogleFonts.sora(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
                         const SizedBox(height: 2),
-                        // FIX: Changed from Colors.whiteBF to a valid translucent white style
-                        Text('≈ ₸$_bonusPoints discount on your next order', style: TextStyle(color: Colors.white.withAlpha(190), fontSize: 12)),
+                        Text('≈ ₸$_bonusPoints discount on your next order', style: TextStyle(color: Colors.white.withAlpha(200), fontSize: 12)),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Account Settings', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w700, color: _textMain)),
+                  Text('Account', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                   const SizedBox(height: 12),
 
-                  // Menu Action List
-                  Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
-                    child: Column(
-                      children: [
-                        _buildMenuItem(Icons.receipt_long_outlined, 'Order History', const Color(0xFFFFF3E0), _orange),
-                        _buildMenuItem(Icons.eco_outlined, 'My Eco Impact', const Color(0xFFF0FDF4), const Color(0xFF22C55E)),
-                        _buildMenuItem(Icons.settings_outlined, 'Settings', const Color(0xFFEFF6FF), const Color(0xFF3B82F6)),
-                        _buildMenuItem(Icons.logout_outlined, 'Sign Out', Colors.red.withAlpha(20), Colors.red, isLast: true, onTap: () {
-                          Navigator.of(context).pushReplacementNamed('/auth');
-                        }),
-                      ],
+                  // --- MENU LIST ---
+                  Column(
+                    children: [
+                      _buildMenuItem('🧾', 'Order History', AppTheme.cOrangePale, () => Navigator.pushNamed(context, '/order-history')),
+                      _buildMenuItem('🌱', 'My Eco Impact', AppTheme.cGreenPale, () => Navigator.pushNamed(context, '/eco-impact')),
+                      _buildMenuItem('⚙️', 'Settings', const Color(0xFFEFF6FF), () => Navigator.pushNamed(context, '/settings')),
+                      _buildMenuItem('💬', 'Help & Support', AppTheme.cOrangePale, () => Navigator.pushNamed(context, '/help')),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Footer Text
+                  Center(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 13, color: AppTheme.cTextSec),
+                        children: [
+                          const TextSpan(text: 'You saved '),
+                          TextSpan(text: '$_mealsSaved meals', style: const TextStyle(color: AppTheme.cGreen, fontWeight: FontWeight.bold)),
+                          const TextSpan(text: ' this month 🌱'),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -151,34 +161,40 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     );
   }
 
-  Widget _buildStatItem(String value, String label) {
-    return Column(
-      children: [
-        Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: _orange)),
-        const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 10, color: _textSec, fontWeight: FontWeight.w500)),
-      ],
+  Widget _buildImpactStat(String value, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          children: [
+            Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.cOrange)),
+            const SizedBox(height: 2),
+            Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.cTextSec, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, Color bgCircle, Color iconColor, {bool isLast = false, VoidCallback? onTap}) {
+  Widget _buildMenuItem(String emoji, String title, Color bgColor, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap ?? () {},
+      onTap: onTap,
       child: Container(
+        margin: const EdgeInsets.only(bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          border: isLast ? null : Border(bottom: BorderSide(color: _border)),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
             Container(
               width: 36, height: 36,
-              decoration: BoxDecoration(color: bgCircle, borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: iconColor, size: 18),
+              decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
+              alignment: Alignment.center,
+              child: Text(emoji, style: const TextStyle(fontSize: 18)),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textMain))),
-            Icon(Icons.chevron_right, color: _textSec.withAlpha(100), size: 16),
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.cTextMain))),
+            const Icon(Icons.chevron_right, color: AppTheme.cTextSec, size: 16),
           ],
         ),
       ),

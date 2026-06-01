@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/repositories/auth_repository.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/network/api_client.dart';
-
-class FoodPreference {
-  final String id;
-  final String name;
-  final String emoji;
-
-  FoodPreference({required this.id, required this.name, required this.emoji});
-}
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -19,144 +11,149 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  final AuthRepository _authRepository = AuthRepository(ApiClient());
-  bool _isLoading = false;
-
-  // Matching the prototype's emoji categories
-  final List<FoodPreference> _categories = [
-    FoodPreference(id: 'fast_food', name: 'Fast Food', emoji: '🍕'),
-    FoodPreference(id: 'bakery', name: 'Bakery', emoji: '🥐'),
-    FoodPreference(id: 'asian', name: 'Asian Food', emoji: '🍜'),
-    FoodPreference(id: 'desserts', name: 'Desserts', emoji: '🍰'),
-    FoodPreference(id: 'healthy', name: 'Healthy Food', emoji: '🥗'),
-    FoodPreference(id: 'drinks', name: 'Drinks', emoji: '🧃'),
-    FoodPreference(id: 'sushi', name: 'Sushi', emoji: '🍣'),
-    FoodPreference(id: 'burgers', name: 'Burgers', emoji: '🍔'),
+  // Prototype Grid Categories[cite: 2]
+  final List<Map<String, String>> _categories = [
+    {'id': 'fast_food', 'name': 'Fast Food', 'emoji': '🍔'},
+    {'id': 'bakery', 'name': 'Bakery', 'emoji': '🥐'},
+    {'id': 'asian', 'name': 'Asian Food', 'emoji': '🍜'},
+    {'id': 'desserts', 'name': 'Desserts', 'emoji': '🍰'},
+    {'id': 'healthy', 'name': 'Healthy Food', 'emoji': '🥗'},
+    {'id': 'drinks', 'name': 'Drinks', 'emoji': '🧃'},
+    {'id': 'sushi', 'name': 'Sushi', 'emoji': '🍣'},
+    {'id': 'pizza', 'name': 'Pizza', 'emoji': '🍕'},
   ];
 
-  final Set<String> _selectedPreferences = {};
+  final Set<String> _selectedPrefs = {};
+  bool _isLoading = false;
 
-  // Theme Colors
-  final Color _orange = const Color(0xFFFF8A00);
-  final Color _bg = const Color(0xFFF8F9FA);
-  final Color _textMain = const Color(0xFF1A1A2E);
-  final Color _textSec = const Color(0xFF64748B);
-  final Color _border = const Color(0xFFE2E8F0);
-  final Color _orangePale = const Color(0xFFFFF3E0);
+  void _savePreferences() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      await ApiClient().dio.post('/users/me/preferences', data: _selectedPrefs.toList());
+    } catch (e) {
+      debugPrint('Error saving preferences: $e');
+    }
 
-  void _togglePreference(String id) {
-    if (_isLoading) return;
-    setState(() {
-      if (_selectedPreferences.contains(id)) {
-        _selectedPreferences.remove(id);
-      } else {
-        _selectedPreferences.add(id);
-      }
-    });
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    // 🔴 DYNAMIC ROUTING: Checks if the user is in the settings flow or onboarding flow
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context); // Pops back to Settings
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preferences Updated!')),
+      );
+    } else {
+      Navigator.of(context).pushReplacementNamed('/feed'); // Pushes to Home Feed
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Determines if the user came from Settings
+    final bool isFromSettings = Navigator.canPop(context);
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppTheme.cBg,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('What do you love? 😍', style: GoogleFonts.sora(fontSize: 24, fontWeight: FontWeight.w800, color: _textMain)),
-                  const SizedBox(height: 6),
-                  Text('Select your food preferences to get personalized deals', style: TextStyle(fontSize: 14, color: _textSec)),
-                  const SizedBox(height: 24),
-                  
-                  // Custom Grid Layout matching the HTML prototype
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- DYNAMIC BACK BUTTON ---
+              if (isFromSettings) ...[
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white, 
+                      borderRadius: BorderRadius.circular(10), 
+                      border: Border.all(color: AppTheme.cBorder)
                     ),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final category = _categories[index];
-                      final isSelected = _selectedPreferences.contains(category.id);
-                      
-                      return GestureDetector(
-                        onTap: () => _togglePreference(category.id),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: isSelected ? _orangePale : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isSelected ? _orange : _border, width: 2),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(category.emoji, style: const TextStyle(fontSize: 32)),
-                              const SizedBox(height: 8),
-                              Text(category.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _textMain)),
-                            ],
-                          ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.chevron_left, size: 18, color: AppTheme.cTextMain),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              Text('What do you love? 😍', style: GoogleFonts.sora(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.cTextMain)),
+              const SizedBox(height: 6),
+              const Text('Select your food preferences to get personalized deals', style: TextStyle(fontSize: 14, color: AppTheme.cTextSec)),
+              const SizedBox(height: 24),
+
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.5,
+                  ),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = _categories[index];
+                    final isSelected = _selectedPrefs.contains(cat['id']);
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedPrefs.remove(cat['id']);
+                          } else {
+                            _selectedPrefs.add(cat['id']!);
+                          }
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppTheme.cOrangePale : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: isSelected ? AppTheme.cOrange : AppTheme.cBorder, width: 2),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  
-                  // The crucial Continue Button & Routing Logic
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (_selectedPreferences.isEmpty || _isLoading)
-                          ? null
-                          : () async {
-                              setState(() => _isLoading = true);
-                              final categoriesList = _selectedPreferences.toList();
-                              
-                              // Capture navigator and messenger states BEFORE the await
-                              final navigator = Navigator.of(context);
-                              final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-                              // Save to database
-                              bool savedSuccessfully = await _authRepository.savePreferences(categoriesList);
-
-                              if (!mounted) return;
-                              setState(() => _isLoading = false);
-
-                              if (savedSuccessfully) {
-                                // Explicitly transfer to the customer feed screen
-                                navigator.pushReplacementNamed('/feed');
-                              } else {
-                                // If it fails, let the user know so they aren't stuck clicking a dead button
-                                scaffoldMessenger.showSnackBar(
-                                  const SnackBar(content: Text('Failed to save choices. Did you drop/refresh your database table?')),
-                                );
-                              }
-                            },
-                      child: _isLoading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('Continue'),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward, size: 18),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(cat['emoji']!, style: const TextStyle(fontSize: 32)),
+                            const SizedBox(height: 8),
+                            Text(cat['name']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.cTextMain)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.cOrange,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _isLoading ? null : _savePreferences,
+                  child: _isLoading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // 🔴 DYNAMIC BUTTON TEXT
+                          Text(isFromSettings ? 'Save Preferences' : 'Continue', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                          if (!isFromSettings) ...[
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                          ]
+                        ],
+                      ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

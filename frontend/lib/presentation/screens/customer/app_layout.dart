@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../customer_feed_screen.dart';
 import 'customer_profile_screen.dart';
+import 'package:daily_tagam_frontend/presentation/screens/customer/customer_explore_screen.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
@@ -15,7 +16,7 @@ class _AppLayoutState extends State<AppLayout> {
   // The active views available inside your persistent bottom menu
   final List<Widget> _screens = [
     const CustomerFeedScreen(),
-    const Center(child: Text('Explore Screen Coming Soon')), // Placeholder stub
+    const CustomerExploreScreen(),
     const Center(child: Text('Rewards Screen Coming Soon')), // Placeholder stub
     const CustomerProfileScreen(),
   ];
