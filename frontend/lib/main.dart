@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:daily_tagam_frontend/presentation/screens/customer/customer_profile_screen.dart'; 
 
 // --- Theme ---
 import 'core/theme/app_theme.dart';
@@ -42,6 +43,7 @@ class DailyTagamApp extends StatelessWidget {
 
         // --- CUSTOMER FLOWS ---
         '/feed': (context) => const CustomerFeedScreen(),
+        '/profile': (context) => const CustomerProfileScreen(),
         '/explore': (context) => const StubScreen(title: 'Explore Deals'),
         
         // --- ROOT FALLBACK ---
