@@ -68,6 +68,73 @@ class _TestNetworkScreenState extends State<TestNetworkScreen> {
     }
   }
 
+  void _showOfferDetailsSheet(BuildContext context, dynamic offer) {
+    double original = (offer['original_price'] as num).toDouble();
+    double discounted = (offer['discounted_price'] as num).toDouble();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+              children: [
+                Text(
+                  offer['title'] ?? 'Food Offer', 
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+                  child: Text('${discounted.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 18)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('Original Price: ${original.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.grey, decoration: TextDecoration.lineThrough)),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text('Pickup Window: ${offer['pickup_time']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.inventory, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text('Items Remaining: ${offer['quantity_available']}', style: const TextStyle(fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                backgroundColor: _userRole == 'business' ? Colors.blue : Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                // Future addition: Trigger a reserve path or edit item method depending on client view state
+              },
+              child: Text(_userRole == 'business' ? 'Manage This Listing' : 'Reserve Food Item'),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showAddOfferModal() {
     final titleController = TextEditingController();
     final originalPriceController = TextEditingController();
@@ -267,44 +334,51 @@ class _TestNetworkScreenState extends State<TestNetworkScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       elevation: 1.5,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 60, height: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1), // Fixed warning
-                                borderRadius: BorderRadius.circular(8)
-                              ),
-                              child: const Icon(Icons.fastfood, color: Colors.green, size: 30),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(offer['title'] ?? 'Surplus Package', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                  const SizedBox(height: 4),
-                                  Text('Pickup: ${offer['pickup_time']}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                  Text('Remaining Stock: ${offer['quantity_available']}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500, fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(4)),
-                                  child: Text('-${savingsPercent.toStringAsFixed(0)}%', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
+                      child: InkWell( // --- ADDED FOR TAPPING INTERACTION ---
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          // Define what happens when a business or user taps a listing card
+                          _showOfferDetailsSheet(context, offer);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 60, height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8)
                                 ),
-                                const SizedBox(height: 4),
-                                Text('${original.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.grey, decoration: TextDecoration.lineThrough, fontSize: 12)),
-                                Text('${discounted.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15)),
-                              ],
-                            )
-                          ],
+                                child: const Icon(Icons.fastfood, color: Colors.green, size: 30),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(offer['title'] ?? 'Surplus Package', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    const SizedBox(height: 4),
+                                    Text('Pickup: ${offer['pickup_time']}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    Text('Remaining Stock: ${offer['quantity_available']}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(4)),
+                                    child: Text('-${savingsPercent.toStringAsFixed(0)}%', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('${original.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.grey, decoration: TextDecoration.lineThrough, fontSize: 12)),
+                                  Text('${discounted.toStringAsFixed(0)} ₸', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15)),
+                                ],
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     );
