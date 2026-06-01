@@ -127,7 +127,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Account', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                  const Text('Account', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                   const SizedBox(height: 12),
 
                   // --- MENU LIST ---

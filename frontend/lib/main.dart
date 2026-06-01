@@ -1,9 +1,17 @@
+import 'package:daily_tagam_frontend/presentation/screens/customer/customer_explore_screen.dart';
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/screens/auth_screen.dart';
 import 'presentation/screens/preferences_screen.dart';
 import 'presentation/screens/customer/app_layout.dart';
 import 'presentation/screens/customer/customer_settings_screen.dart';
+import 'presentation/screens/customer/customer_detail_screen.dart';
+import 'presentation/screens/customer/customer_cart_screen.dart';
+import 'presentation/screens/customer/customer_rewards_screen.dart';
+import 'presentation/screens/customer/customer_eco_impact_screen.dart';
+import 'presentation/screens/customer/customer_notifications_screen.dart';
+import 'presentation/screens/customer/customer_all_deals_screen.dart';
+import 'presentation/screens/customer/customer_all_restaurants_screen.dart';
 
 // --- Temporary Stubs for Prototype Routes ---
 class StubScreen extends StatelessWidget {
@@ -43,14 +51,21 @@ class DailyTagamApp extends StatelessWidget {
         '/feed': (context) => const AppLayout(), 
         
         // --- SECONDARY SCREENS ---
-        '/explore': (context) => const StubScreen(title: 'Explore Deals'),
-        '/cart': (context) => const StubScreen(title: 'My Cart'),
-        '/rewards': (context) => const StubScreen(title: 'Rewards'),
-        '/notifications': (context) => const StubScreen(title: 'Notifications'),
-        '/eco-impact': (context) => const StubScreen(title: 'Eco Impact'),
-        '/all-deals': (context) => const StubScreen(title: 'All Deals'),
-        '/all-restaurants': (context) => const StubScreen(title: 'Nearby Restaurants'),
+        // ignore: equal_keys_in_map
+        '/auth': (context) => const AuthScreen(),
+        // ignore: equal_keys_in_map
+        '/preferences': (context) => const PreferencesScreen(),
+        // ignore: equal_keys_in_map
+        '/feed': (context) => const AppLayout(),
         '/settings': (context) => const CustomerSettingsScreen(),
+        '/detail': (context) => const CustomerDetailScreen(),
+        '/cart': (context) => const CustomerCartScreen(),
+        '/explore': (context) => const CustomerExploreScreen(),
+        '/rewards': (context) => const CustomerRewardsScreen(),
+        '/eco-impact': (context) => const CustomerEcoImpactScreen(),
+        '/notifications': (context) => const CustomerNotificationsScreen(),
+        '/all-deals': (context) => const CustomerAllDealsScreen(),
+        '/all-restaurants': (context) => const CustomerAllRestaurantsScreen(),
         
         // --- FALLBACK ---
         '/': (context) => const AuthScreen(),

@@ -36,14 +36,13 @@ class AppTheme {
       textTheme: TextTheme(
         displayLarge: GoogleFonts.sora(color: cTextMain, fontWeight: FontWeight.w800),
         titleLarge: GoogleFonts.sora(color: cTextMain, fontWeight: FontWeight.w700),
-        bodyLarge: TextStyle(color: cTextMain),
-        bodyMedium: TextStyle(color: cTextSec),
+        bodyLarge: const TextStyle(color: cTextMain),
+        bodyMedium: const TextStyle(color: cTextSec),
       ),
       colorScheme: const ColorScheme.light(
         primary: cOrange,
         secondary: cGreen,
         surface: cCard,
-        background: cBg,
       ),
     );
   }
@@ -57,14 +56,13 @@ class AppTheme {
       textTheme: TextTheme(
         displayLarge: GoogleFonts.spaceGrotesk(color: bTextMain, fontWeight: FontWeight.w700),
         titleLarge: GoogleFonts.spaceGrotesk(color: bTextMain, fontWeight: FontWeight.w700),
-        bodyLarge: TextStyle(color: bTextMain),
-        bodyMedium: TextStyle(color: bTextSec),
+        bodyLarge: const TextStyle(color: bTextMain),
+        bodyMedium: const TextStyle(color: bTextSec),
       ),
       colorScheme: const ColorScheme.dark(
         primary: bAccentPurple,
         secondary: bAccentTeal,
         surface: bSurface,
-        background: bBg,
       ),
     );
   }

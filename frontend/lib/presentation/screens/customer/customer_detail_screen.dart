@@ -262,12 +262,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         children: [
                           const Text('🎟️', style: TextStyle(fontSize: 32)),
                           const SizedBox(width: 14),
-                          Expanded(
+                          const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Special Coupon', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
-                                const SizedBox(height: 2),
+                                Text('Special Coupon', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                                SizedBox(height: 2),
                                 Text('Apply at checkout for extra savings', style: TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
                               ],
                             ),
