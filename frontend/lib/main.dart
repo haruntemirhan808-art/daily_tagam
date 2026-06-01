@@ -334,10 +334,11 @@ class _TestNetworkScreenState extends State<TestNetworkScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       elevation: 1.5,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: InkWell( // --- ADDED FOR TAPPING INTERACTION ---
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
-                          // Define what happens when a business or user taps a listing card
+                          // Fixes the async gap warning by checking if the widget is still on screen
+                          if (!mounted) return; 
                           _showOfferDetailsSheet(context, offer);
                         },
                         child: Padding(

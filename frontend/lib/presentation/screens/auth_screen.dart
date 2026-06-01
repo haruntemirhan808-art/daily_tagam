@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../core/network/api_client.dart';
+import 'package:daily_tagam_frontend/presentation/screens/preferences_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -44,13 +45,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isLogin ? 'Login successful!' : 'Registration successful! Please login.')),
+        SnackBar(content: Text(_isLogin ? 'Login successful!' : 'Registration successful!')),
       );
+
       if (_isLogin) {
-        if (!mounted) return; // Guard async gap warning
+        // --- LOGIN SUCCESS NAVIGATION ---
+        // For now, it defaults back to your feed page. 
+        // Later, if your repository returns role info, you can switch routes here!
         Navigator.of(context).pushReplacementNamed('/feed');
       } else {
-        setState(() => _isLogin = true); 
+        // --- SIGN UP SUCCESS NAVIGATION ---
+        // If they just registered as a customer, send them straight to personalize their dashboard
+        if (_selectedRole == 'customer') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+          );
+        } else {
+          // If a business signs up, flip them over to login or send them to their dashboard
+          setState(() => _isLogin = true);
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +112,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       if (!_isLogin) ...[
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          initialValue: _selectedRole, // Fixed: Swapped value for initialValue parameter
+                          initialValue: _selectedRole,
                           decoration: const InputDecoration(labelText: 'Register as', prefixIcon: Icon(Icons.person_pin)),
                           items: const [
                             DropdownMenuItem(value: 'customer', child: Text('Customer (Save food)')),

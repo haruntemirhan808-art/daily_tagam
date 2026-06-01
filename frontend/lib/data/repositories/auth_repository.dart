@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthRepository {
   final ApiClient apiClient;
@@ -43,6 +44,24 @@ class AuthRepository {
       }
       return false;
     } catch (e) {
+      return false;
+    }
+  }
+
+  // Inside your API/Auth repository class:
+  Future<bool> savePreferences(List<String> categories) async {
+    try {
+      // FIX: Added .dio before .post to use your configured Dio instance wrapper
+      final response = await apiClient.dio.post( 
+        '/users/me/preferences', 
+        data: {
+          'categories': categories,
+        },
+      );
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error writing preference payload: ${e.toString()}');
       return false;
     }
   }
