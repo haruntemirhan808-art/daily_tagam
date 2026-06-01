@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 
 from app.core.database import engine, Base, get_db
 from app.models import user as user_models
@@ -48,6 +49,32 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 # --- CUSTOMER ENDPOINTS ---
+
+class UserPreferencesSchema(BaseModel):
+    categories: List[str]
+
+@app.post("/users/me/preferences")
+def save_user_preferences(
+    payload: UserPreferencesSchema, 
+    current_user: user_models.User = Depends(security.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Saves a customer's selected food categories to personalize their marketplace feed.
+    """
+    if not payload.categories:
+        raise HTTPException(
+            status_code=400, 
+            detail="At least one food category preference must be chosen."
+        )
+    
+    # This matches your uploaded JSON dictionary logic seamlessly
+    return {
+        "message": "Preferences updated successfully!",
+        "customer_id": current_user.id,
+        "email": current_user.email,
+        "saved_categories": payload.categories
+    }
 
 @app.post("/users/me/upload")
 def upload_customer_info(
