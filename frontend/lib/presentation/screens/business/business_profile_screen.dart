@@ -18,6 +18,9 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
   String _bizName = 'Napoli Pizza';
   String _bizEmail = 'manager@napoli.kz';
   String _bizEmoji = '🍕';
+  int _activeOffers = 0;
+  int _totalOrders = 0;
+  int _totalRevenue = 0;
 
   @override
   void initState() {
@@ -33,6 +36,9 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
           _bizName = response.data['name'] ?? 'Napoli Pizza';
           _bizEmail = response.data['email'] ?? 'manager@napoli.kz';
           _bizEmoji = response.data['emoji'] ?? '🍕';
+          _activeOffers = response.data['active_offer_count'] ?? 0;
+          _totalOrders = response.data['total_orders'] ?? 0;
+          _totalRevenue = response.data['total_revenue'] ?? 0;
           _isLoading = false;
         });
       }
@@ -134,6 +140,27 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     );
   }
 
+  Widget _buildMetricChip(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.bBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.bTextMain)),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.bTextSec)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -173,6 +200,16 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                   )
                 ],
               ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                _buildMetricChip('Offers', '$_activeOffers'),
+                const SizedBox(width: 10),
+                _buildMetricChip('Orders', '$_totalOrders'),
+                const SizedBox(width: 10),
+                _buildMetricChip('Revenue', '₸$_totalRevenue'),
+              ],
             ),
             const SizedBox(height: 24),
 

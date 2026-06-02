@@ -28,16 +28,16 @@ class _CustomerEcoImpactScreenState extends State<CustomerEcoImpactScreen> {
       final response = await _apiClient.dio.get('/users/me/profile');
       if (response.statusCode == 200 && mounted) {
         setState(() {
-          _wasteSaved = double.tryParse(response.data['waste_saved_kg']?.toString() ?? '5.6') ?? 5.6;
-          _ordersCount = 14; 
+          _wasteSaved = double.tryParse(response.data['waste_saved_kg']?.toString() ?? '0') ?? 0.0;
+          _ordersCount = response.data['order_count'] ?? 0;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _wasteSaved = 5.6;
-          _ordersCount = 14;
+          _wasteSaved = 0.0;
+          _ordersCount = 0;
           _isLoading = false;
         });
       }

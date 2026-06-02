@@ -16,6 +16,7 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
 
   String _activeFilter = 'Today';
   final List<String> _filters = ['Today', 'This Week', 'This Month'];
+  List<Map<String, dynamic>> _dashboardKpis = [];
 
   // 🔴 INTERACTIVE: Dynamic KPI Data mapped to the selected filter
   final Map<String, List<Map<String, dynamic>>> _kpiData = {
@@ -51,17 +52,56 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
-      // Prepared for your FastAPI business endpoints
       final response = await _apiClient.dio.get('/business/me/dashboard');
       if (response.statusCode == 200 && mounted) {
+        final liveOrders = List<Map<String, dynamic>>.from(response.data['live_orders'] ?? []);
+        final activeDeals = List<Map<String, dynamic>>.from(response.data['active_deals'] ?? []);
+        final dailyMeals = response.data['daily_meals_sold'] ?? 0;
+        final dailyRevenue = response.data['daily_revenue'] ?? 0;
+        final totalOrders = response.data['total_orders'] ?? 0;
+        final activeOffers = response.data['active_offers'] ?? 0;
+
         setState(() {
-          _liveOrders = List<Map<String, dynamic>>.from(response.data['live_orders'] ?? []);
-          _activeDeals = List<Map<String, dynamic>>.from(response.data['active_deals'] ?? []);
+          _liveOrders = liveOrders;
+          _activeDeals = activeDeals;
+          _dashboardKpis = [
+            {
+              'emoji': '🍽️',
+              'val': '$dailyMeals',
+              'lbl': 'Meals Sold',
+              'change': 'Today',
+              'isUp': true,
+              'color': AppTheme.bAccentPurple,
+            },
+            {
+              'emoji': '💰',
+              'val': '₸$dailyRevenue',
+              'lbl': 'Revenue',
+              'change': 'Today',
+              'isUp': true,
+              'color': AppTheme.cOrange,
+            },
+            {
+              'emoji': '🛒',
+              'val': '$totalOrders',
+              'lbl': 'Orders',
+              'change': 'Total',
+              'isUp': true,
+              'color': AppTheme.bAccentTeal,
+            },
+            {
+              'emoji': '📦',
+              'val': '$activeOffers',
+              'lbl': 'Active Offers',
+              'change': 'Live',
+              'isUp': true,
+              'color': const Color(0xFFFF6B9D),
+            },
+          ];
           _isLoading = false;
         });
       }
     } catch (e) {
-      // Fallback interactive data so the UI remains testable
       if (mounted) {
         setState(() {
           _liveOrders = [
@@ -73,6 +113,7 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
             {'emoji': '🍕', 'title': 'Pizza Combo Box', 'sub': '5 remaining • 70% OFF • ends 9 PM', 'status': 'Live', 'color': AppTheme.bAccentTeal},
             {'emoji': '🥗', 'title': 'Caesar Salad Pack', 'sub': '2 remaining • 55% OFF • ends 8 PM', 'status': 'Ending', 'color': AppTheme.cOrange},
           ];
+          _dashboardKpis = [];
           _isLoading = false;
         });
       }
@@ -177,7 +218,7 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
       return const Scaffold(backgroundColor: AppTheme.bBg, body: Center(child: CircularProgressIndicator(color: AppTheme.bAccentPurple)));
     }
 
-    final currentKpis = _kpiData[_activeFilter]!;
+    final currentKpis = _dashboardKpis.isNotEmpty ? _dashboardKpis : _kpiData[_activeFilter]!;
 
     return Scaffold(
       backgroundColor: AppTheme.bBg,
@@ -410,7 +451,8 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
     );
   }
 
-  Widget _buildLiveOrder(String emoji, String title, String sub, String status, Color statusColor, VoidCallback onTap) {
+  Widget _buildLiveOrder(String emoji, String title, String sub, String status, Color? statusColor, VoidCallback onTap) {
+    final resolvedColor = statusColor ?? AppTheme.bAccentPurple;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -443,10 +485,10 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: status == 'Done' ? Colors.white.withAlpha(20) : statusColor.withAlpha(50),
+                color: status == 'Done' ? Colors.white.withAlpha(20) : resolvedColor.withAlpha(50),
                 borderRadius: BorderRadius.circular(50),
               ),
-              child: Text(status, style: TextStyle(color: status == 'Done' ? AppTheme.bTextSec : statusColor, fontSize: 10, fontWeight: FontWeight.w700)),
+              child: Text(status, style: TextStyle(color: status == 'Done' ? AppTheme.bTextSec : resolvedColor, fontSize: 10, fontWeight: FontWeight.w700)),
             )
           ],
         ),
@@ -454,7 +496,8 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
     );
   }
 
-  Widget _buildActiveDeal(String emoji, String title, String sub, String status, Color statusColor, VoidCallback onTap) {
+  Widget _buildActiveDeal(String emoji, String title, String sub, String status, Color? statusColor, VoidCallback onTap) {
+    final resolvedColor = statusColor ?? AppTheme.cOrange;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -487,10 +530,10 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: statusColor.withAlpha(50),
+                color: resolvedColor.withAlpha(50),
                 borderRadius: BorderRadius.circular(50),
               ),
-              child: Text(status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w700)),
+              child: Text(status, style: TextStyle(color: resolvedColor, fontSize: 10, fontWeight: FontWeight.w700)),
             )
           ],
         ),

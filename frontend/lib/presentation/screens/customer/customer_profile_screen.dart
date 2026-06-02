@@ -21,6 +21,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   double _wasteSaved = 0.0;
   String _moneySaved = "₸0";
   int _bonusPoints = 0;
+  int _orderCount = 0;
+  String _totalSpent = "₸0";
 
   @override
   void initState() {
@@ -40,6 +42,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           _wasteSaved = double.tryParse(response.data['waste_saved_kg']?.toString() ?? '0') ?? 0.0;
           _moneySaved = response.data['money_saved']?.toString() ?? "₸0";
           _bonusPoints = response.data['bonus_points'] ?? 0;
+          _orderCount = response.data['order_count'] ?? 0;
+          _totalSpent = response.data['total_spent']?.toString() ?? "₸0";
           _isLoading = false;
         });
       }
@@ -124,8 +128,36 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                         Text('≈ ₸$_bonusPoints discount on your next order', style: TextStyle(color: Colors.white.withAlpha(200), fontSize: 12)),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                  ),                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Orders placed', style: const TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
+                            const SizedBox(height: 4),
+                            Text('$_orderCount', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('Total spent', style: const TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
+                            const SizedBox(height: 4),
+                            Text(_totalSpent, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),                  const SizedBox(height: 24),
 
                   const Text('Account', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                   const SizedBox(height: 12),

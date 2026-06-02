@@ -30,18 +30,18 @@ class _CustomerRewardsScreenState extends State<CustomerRewardsScreen> {
       final response = await _apiClient.dio.get('/users/me/profile');
       if (response.statusCode == 200 && mounted) {
         setState(() {
-          _bonusPoints = response.data['bonus_points'] ?? 1240;
-          _mealsSaved = response.data['meals_saved'] ?? 14;
-          _ordersCount = 14; 
+          _bonusPoints = response.data['bonus_points'] ?? 0;
+          _mealsSaved = response.data['meals_saved'] ?? 0;
+          _ordersCount = response.data['order_count'] ?? 0;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _bonusPoints = 1240;
-          _mealsSaved = 14;
-          _ordersCount = 14;
+          _bonusPoints = 0;
+          _mealsSaved = 0;
+          _ordersCount = 0;
           _isLoading = false;
         });
       }
