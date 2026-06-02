@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import date
+from datetime import date, timedelta
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
 
 from app.core.database import engine, Base, get_db
@@ -239,6 +239,7 @@ class BusinessDashboardResponse(BaseModel):
     daily_revenue: int
     total_orders: int
     active_offers: int
+    weekly_sales: List[int]
     live_orders: List[BusinessOrderSummary]
     active_deals: List[BusinessDealSummary]
 
@@ -291,6 +292,13 @@ def get_business_dashboard(
         if order.created_at.date() == today
     ]
 
+    last_7_days = [today - timedelta(days=d) for d in range(6, -1, -1)]
+    weekly_sales = []
+    for day in last_7_days:
+        weekly_sales.append(
+            sum(order.quantity for order, offer in all_business_orders if order.created_at.date() == day)
+        )
+
     def build_order_summary(order, offer):
         return {
             "emoji": offer.title[0] if offer.title else "🍽️",
@@ -330,6 +338,7 @@ def get_business_dashboard(
             food_offer_models.FoodOffer.is_active,
             food_offer_models.FoodOffer.quantity_available > 0
         ).count(),
+        "weekly_sales": weekly_sales,
         "live_orders": live_orders,
         "active_deals": active_deals,
     }

@@ -6,7 +6,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Load the environment variables from the .env file
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://tagam_admin:AmanIsTheBest@localhost:5432/daily_tagam")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set!")
