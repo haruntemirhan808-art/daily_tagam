@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from datetime import date
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 from app.core.database import engine, Base, get_db
@@ -99,25 +100,34 @@ def get_customer_profile(
     current_user: user_models.User = Depends(security.get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Fetches the profile info, impact figures, and saved metrics for the current customer.
-    """
-    # Parse out a clean display name from their registration email
+    # Parse out a clean display name
     display_name = current_user.email.split("@")[0].capitalize()
-    
-    # Calculate their impact metric based on real database records
-    # For now, we mock 14 meals saved (5.6kg waste reduction) until your orders table is filled with data
-    meals_saved = 14
-    waste_saved_kg = round(meals_saved * 0.4, 1) # Each meal rescued avoids roughly 0.4kg of food waste
-    money_saved_tenge = meals_saved * 1200        # Estimated savings based on average platform discounts
-    
+
+    ordered_items = db.query(order_models.Order, food_offer_models.FoodOffer).join(
+        food_offer_models.FoodOffer,
+        order_models.Order.food_offer_id == food_offer_models.FoodOffer.id
+    ).filter(order_models.Order.customer_id == current_user.id).all()
+
+    meals_saved = sum(order.quantity for order, _ in ordered_items)
+    money_saved_tenge = sum(
+        max(0, (offer.original_price - offer.discounted_price) * order.quantity)
+        for order, offer in ordered_items
+    )
+    total_spent = sum(
+        offer.discounted_price * order.quantity
+        for order, offer in ordered_items
+    )
+    bonus_points = total_spent // 10
+
     return {
         "name": display_name,
         "email": current_user.email,
         "meals_saved": meals_saved,
-        "waste_saved_kg": waste_saved_kg,
+        "waste_saved_kg": round(meals_saved * 0.4, 1),
         "money_saved": f"₸{money_saved_tenge:,}",
-        "bonus_points": meals_saved * 50, # Every saved meal awards 50 points
+        "bonus_points": bonus_points,
+        "order_count": len(ordered_items),
+        "total_spent": f"₸{total_spent:,}",
         "preferences": current_user.preferences or []
     }
 
@@ -169,38 +179,161 @@ def get_customer_dashboard(
     """
     Fetches the dynamic dashboard context for the logged-in customer.
     """
-    # 1. Generate a display name from the email (e.g., "kharun@email.com" -> "Kharun")
     display_name = current_user.email.split("@")[0].capitalize()
-    
-    # 2. Fetch up to 5 real registered businesses from your users table
+
     businesses = db.query(user_models.User).filter(user_models.User.role == "business").limit(5).all()
-    
-    # 3. Format the active restaurants
+
     nearby_restaurants = []
     for biz in businesses:
-        # Count how many active deals this specific business currently has
         active_deals = db.query(food_offer_models.FoodOffer).filter(
-            food_offer_models.FoodOffer.business_id == biz.id, 
+            food_offer_models.FoodOffer.business_id == biz.id,
             food_offer_models.FoodOffer.is_active,
             food_offer_models.FoodOffer.quantity_available > 0
         ).count()
-        
+
         nearby_restaurants.append({
             "id": biz.id,
             "name": f"{biz.email.split('@')[0].capitalize()} Restaurant",
-            "distance": "0.5 km", # Static placeholder until geospatial PostGIS is added
-            "rating": 4.8,        # Static placeholder until review system is built
+            "distance": "0.5 km",
+            "rating": 4.8,
             "active_deals": active_deals
         })
 
+    # Build a customer-specific stats summary from actual completed orders
+    customer_orders = db.query(order_models.Order, food_offer_models.FoodOffer).join(
+        food_offer_models.FoodOffer,
+        order_models.Order.food_offer_id == food_offer_models.FoodOffer.id
+    ).filter(order_models.Order.customer_id == current_user.id).all()
+
+    meals_saved = sum(order.quantity for order, _ in customer_orders)
+
     return {
         "name": display_name,
-        "meals_saved": 14, # Static integer until you start tracking completed order history
+        "meals_saved": meals_saved,
         "nearby_restaurants": nearby_restaurants
     }
 
 
+class BusinessProfileResponse(BaseModel):
+    name: str
+    email: str
+    active_offer_count: int
+    total_orders: int
+    total_revenue: int
+    preferences: List[str] = []
+
+class BusinessDealSummary(BaseModel):
+    emoji: str
+    title: str
+    sub: str
+    status: str
+
+class BusinessOrderSummary(BaseModel):
+    emoji: str
+    title: str
+    sub: str
+    status: str
+
+class BusinessDashboardResponse(BaseModel):
+    daily_meals_sold: int
+    daily_revenue: int
+    total_orders: int
+    active_offers: int
+    live_orders: List[BusinessOrderSummary]
+    active_deals: List[BusinessDealSummary]
+
+
 # --- BUSINESS ENDPOINTS ---
+
+@app.get("/business/me/profile", response_model=BusinessProfileResponse)
+def get_business_profile(
+    current_business: user_models.User = Depends(security.get_current_business_user),
+    db: Session = Depends(get_db)
+):
+    active_offers = db.query(food_offer_models.FoodOffer).filter(
+        food_offer_models.FoodOffer.business_id == current_business.id,
+        food_offer_models.FoodOffer.is_active,
+        food_offer_models.FoodOffer.quantity_available > 0
+    ).count()
+
+    orders = db.query(order_models.Order, food_offer_models.FoodOffer).join(
+        food_offer_models.FoodOffer,
+        order_models.Order.food_offer_id == food_offer_models.FoodOffer.id
+    ).filter(food_offer_models.FoodOffer.business_id == current_business.id).all()
+
+    total_orders = len(orders)
+    total_revenue = sum(offer.discounted_price * order.quantity for order, offer in orders)
+
+    return {
+        "name": current_business.email.split("@")[0].capitalize(),
+        "email": current_business.email,
+        "active_offer_count": active_offers,
+        "total_orders": total_orders,
+        "total_revenue": total_revenue,
+        "preferences": current_business.preferences or []
+    }
+
+
+@app.get("/business/me/dashboard", response_model=BusinessDashboardResponse)
+def get_business_dashboard(
+    current_business: user_models.User = Depends(security.get_current_business_user),
+    db: Session = Depends(get_db)
+):
+    all_business_orders = db.query(order_models.Order, food_offer_models.FoodOffer).join(
+        food_offer_models.FoodOffer,
+        order_models.Order.food_offer_id == food_offer_models.FoodOffer.id
+    ).filter(food_offer_models.FoodOffer.business_id == current_business.id).all()
+
+    today = date.today()
+    daily_orders = [
+        (order, offer)
+        for order, offer in all_business_orders
+        if order.created_at.date() == today
+    ]
+
+    def build_order_summary(order, offer):
+        return {
+            "emoji": offer.title[0] if offer.title else "🍽️",
+            "title": offer.title,
+            "sub": f"{order.quantity} × ₸{offer.discounted_price}",
+            "status": "New" if order.status == "PENDING" else order.status.capitalize(),
+        }
+
+    live_orders = [
+        build_order_summary(order, offer)
+        for order, offer in all_business_orders
+        if order.status in {"PENDING", "READY"}
+    ][:6]
+
+    active_offers_query = db.query(food_offer_models.FoodOffer).filter(
+        food_offer_models.FoodOffer.business_id == current_business.id,
+        food_offer_models.FoodOffer.is_active,
+        food_offer_models.FoodOffer.quantity_available > 0
+    ).all()
+
+    active_deals = [
+        {
+            "emoji": offer.title[0] if offer.title else "🍽️",
+            "title": offer.title,
+            "sub": f"{offer.quantity_available} left • ₸{offer.discounted_price}",
+            "status": "Live",
+        }
+        for offer in active_offers_query
+    ]
+
+    return {
+        "daily_meals_sold": sum(order.quantity for order, _ in daily_orders),
+        "daily_revenue": sum(offer.discounted_price * order.quantity for order, offer in daily_orders),
+        "total_orders": len(all_business_orders),
+        "active_offers": db.query(food_offer_models.FoodOffer).filter(
+            food_offer_models.FoodOffer.business_id == current_business.id,
+            food_offer_models.FoodOffer.is_active,
+            food_offer_models.FoodOffer.quantity_available > 0
+        ).count(),
+        "live_orders": live_orders,
+        "active_deals": active_deals,
+    }
+
 
 @app.post("/business/offers", response_model=food_offer_schemas.FoodOfferResponse)
 def publish_food_offer(
