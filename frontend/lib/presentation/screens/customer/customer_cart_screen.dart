@@ -61,6 +61,19 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
     });
   }
 
+  void _removeItem(int index) {
+    setState(() {
+      _cartItems.removeAt(index);
+      // Recalculate coupon if it's percentage-based
+      if (_couponDiscount > 0) {
+        _couponDiscount = (_subtotal * 0.10).round();
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: const Text('Item removed from cart'), backgroundColor: Colors.red.shade400, duration: const Duration(seconds: 2)),
+    );
+  }
+
   void _applyCoupon() {
     FocusScope.of(context).unfocus(); // Dismiss keyboard
     final code = _couponController.text.trim().toUpperCase();
@@ -167,7 +180,7 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
                                     Text(item['title'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                                     Text(item['rest'], style: const TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
                                     const SizedBox(height: 8),
-                                    // Qty Control
+                                    // Qty Control & Remove
                                     Row(
                                       children: [
                                         _buildSmallQtyBtn('−', () => _changeQty(index, -1)),
@@ -176,6 +189,19 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
                                           child: Text('${item['qty']}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                                         ),
                                         _buildSmallQtyBtn('+', () => _changeQty(index, 1)),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: () => _removeItem(index),
+                                          child: Container(
+                                            width: 28, height: 28,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red.shade50,
+                                              border: Border.all(color: Colors.red.shade300, width: 1.5),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(Icons.close, color: Colors.red.shade600, size: 16),
+                                          ),
+                                        ),
                                       ],
                                     )
                                   ],
@@ -315,9 +341,7 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
                       height: 54,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Will route to checkout screen next!
-                          // Navigator.pushNamed(context, '/checkout');
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checkout coming next!')));
+                          Navigator.pushNamed(context, '/checkout');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.cOrange,

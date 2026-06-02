@@ -1,9 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
 import '../../../core/theme/app_theme.dart';
 
-class BusinessAnalyticsScreen extends StatelessWidget {
+class BusinessAnalyticsScreen extends StatefulWidget {
   const BusinessAnalyticsScreen({super.key});
+
+  @override
+  State<BusinessAnalyticsScreen> createState() => _BusinessAnalyticsScreenState();
+}
+
+class _BusinessAnalyticsScreenState extends State<BusinessAnalyticsScreen> {
+  int _totalRevenue = 0;
+  int _totalOrders = 0;
+  int _dailyMealsSold = 0;
+  List<int> _weeklySales = List<int>.filled(7, 0);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAnalyticsData();
+  }
+
+  Future<void> _fetchAnalyticsData() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get('http://127.0.0.1:8000/business/me/dashboard',
+        options: Options(headers: {'Authorization': 'Bearer YOUR_TOKEN_HERE'}),
+      );
+      
+      if (mounted) {
+        setState(() {
+          _totalRevenue = response.data['total_revenue'] ?? 0;
+          _totalOrders = response.data['total_orders'] ?? 0;
+          _dailyMealsSold = response.data['daily_meals_sold'] ?? 0;
+          _weeklySales = List<int>.from(response.data['weekly_sales'] ?? List<int>.filled(7, 0));
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  List<double> get _weeklyPerformanceRatios {
+    if (_weeklySales.isEmpty) return List<double>.filled(7, 0.0);
+    final maxSales = _weeklySales.reduce((a, b) => a > b ? a : b);
+    if (maxSales == 0) return List<double>.filled(7, 0.0);
+    return _weeklySales.map((sales) => (sales / maxSales).clamp(0.05, 1.0)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +82,15 @@ class BusinessAnalyticsScreen extends StatelessWidget {
                         children: [
                           Text('Total Revenue (This Month)', style: TextStyle(color: Colors.white.withAlpha(200), fontSize: 13)),
                           const SizedBox(height: 8),
-                          Text('₸1,240,500', style: GoogleFonts.spaceGrotesk(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
+                          _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text('₸${_totalRevenue.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', 
+                                  style: GoogleFonts.spaceGrotesk(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
                           const SizedBox(height: 16),
                           Row(
                             children: [
-                              _buildStat('Orders', '842'),
-                              _buildStat('Waste Saved', '340kg'),
+                              _buildStat('Orders', _totalOrders.toString()),
+                              _buildStat('Meals Sold', _dailyMealsSold.toString()),
                             ],
                           )
                         ],
@@ -49,29 +100,44 @@ class BusinessAnalyticsScreen extends StatelessWidget {
                     Text('Weekly Performance', style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.bTextMain)),
                     const SizedBox(height: 16),
                     Container(
-                      height: 200,
-                      padding: const EdgeInsets.all(16),
+                      height: 120,
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(color: AppTheme.bCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppTheme.bBorder)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          _buildBar('Mon', 0.4),
-                          _buildBar('Tue', 0.6),
-                          _buildBar('Wed', 0.5),
-                          _buildBar('Thu', 0.8),
-                          _buildBar('Fri', 1.0, isHighlight: true),
-                          _buildBar('Sat', 0.9),
-                          _buildBar('Sun', 0.7),
-                        ],
+                        children: _weeklyPerformanceRatios
+                            .asMap()
+                            .entries
+                            .map((entry) => _buildBar(
+                                  ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][entry.key],
+                                  entry.value,
+                                  isHighlight: entry.key == 4,
+                                ))
+                            .toList(),
                       ),
                     ),
                     const SizedBox(height: 24),
                     Text('Top Selling Items', style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.bTextMain)),
                     const SizedBox(height: 12),
-                    _buildTopItem('🍕', 'Pizza Combo Box', '312 sold', '₸327,600'),
-                    _buildTopItem('🥗', 'Caesar Salad Pack', '145 sold', '₸130,500'),
-                    _buildTopItem('🥐', 'Morning Bakery Set', '98 sold', '₸70,560'),
+                    _isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.only(top: 20),
+                            child: CircularProgressIndicator(),
+                          )
+                        : _totalOrders == 0
+                            ? Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(color: AppTheme.bCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.bBorder)),
+                                child: const Text('No sales yet. Your weekly chart will appear once you start selling.', style: TextStyle(color: AppTheme.bTextSec, fontSize: 14)),
+                              )
+                            : Column(
+                                children: [
+                                  _buildTopItem('🍕', 'Pizza Combo Box', '0 sold', '₸0'),
+                                  _buildTopItem('🥗', 'Caesar Salad Pack', '0 sold', '₸0'),
+                                  _buildTopItem('🥐', 'Morning Bakery Set', '0 sold', '₸0'),
+                                ],
+                              ),
                   ],
                 ),
               ),
@@ -95,18 +161,19 @@ class BusinessAnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildBar(String day, double heightRatio, {bool isHighlight = false}) {
+    final barHeight = (56 * heightRatio).clamp(10.0, 56.0);
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Container(
-          width: 24,
-          height: 140 * heightRatio,
+          width: 18,
+          height: barHeight,
           decoration: BoxDecoration(
             color: isHighlight ? AppTheme.bAccentTeal : AppTheme.bAccentPurple.withAlpha(100),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(day, style: const TextStyle(color: AppTheme.bTextSec, fontSize: 11)),
       ],
     );

@@ -101,13 +101,22 @@ class _CustomerFeedScreenState extends State<CustomerFeedScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Good morning!', style: TextStyle(fontSize: 13, color: AppTheme.cTextSec)),
-                  Text('$_userName 👋', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.cTextMain)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Good morning!', style: TextStyle(fontSize: 13, color: AppTheme.cTextSec)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$_userName 👋',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.cTextMain),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Row(
                 children: [
                   _buildIconBadge(Icons.notifications_none, '3', () => Navigator.pushNamed(context, '/notifications')),
@@ -284,7 +293,14 @@ class _CustomerFeedScreenState extends State<CustomerFeedScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final offer = items[index];
-          final isBonus = offer['badge'] == 'Bonus';
+          final badgeText = offer['badge']?.toString() ?? 'SALE';
+          final isBonus = badgeText == 'Bonus';
+          final title = offer['title']?.toString() ?? offer['name']?.toString() ?? 'Special Deal';
+          final rest = offer['restaurant_name']?.toString() ?? offer['rest']?.toString() ?? 'Restaurant';
+          final oldPrice = offer['old']?.toString() ?? offer['original_price']?.toString() ?? '';
+          final newPrice = offer['new']?.toString() ?? offer['discounted_price']?.toString() ?? '';
+          final timeLabel = offer['time']?.toString() ?? 'Now';
+          final emoji = offer['emoji']?.toString() ?? '🍽️';
 
           return GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/detail'), // Future detail screen connection
@@ -307,13 +323,13 @@ class _CustomerFeedScreenState extends State<CustomerFeedScreen> {
                       ),
                       child: Stack(
                         children: [
-                          Center(child: Text(offer['emoji'] ?? '🍽️', style: const TextStyle(fontSize: 52))), 
+                          Center(child: Text(emoji, style: const TextStyle(fontSize: 52))),
                           Positioned(
                             top: 10, left: 10,
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(color: isBonus ? AppTheme.cGreen : AppTheme.cOrange, borderRadius: BorderRadius.circular(50)),
-                              child: Text(offer['badge'] ?? 'SALE', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                              child: Text(badgeText, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                             ),
                           )
                         ],
@@ -325,27 +341,55 @@ class _CustomerFeedScreenState extends State<CustomerFeedScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(offer['title'], maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                        Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
                         const SizedBox(height: 4),
-                        Text('🏪 ${offer['rest']}', style: TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
+                        Text('🏪 $rest', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
                         const SizedBox(height: 8),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              children: [
-                                Text('₸${offer['old']}', style: TextStyle(fontSize: 11, color: AppTheme.cTextSec.withAlpha(150), decoration: TextDecoration.lineThrough)),
-                                const SizedBox(width: 4),
-                                Text('₸${offer['new']}', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.cOrange)),
-                              ],
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  if (oldPrice.isNotEmpty)
+                                    Flexible(
+                                      child: Text(
+                                        '₸$oldPrice',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 11, color: AppTheme.cTextSec.withAlpha(150), decoration: TextDecoration.lineThrough),
+                                      ),
+                                    ),
+                                  if (oldPrice.isNotEmpty) const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '₸$newPrice',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.cOrange),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            Row(
-                              children: [
-                                Icon(Icons.access_time_filled, size: 11, color: AppTheme.cOrange),
-                                const SizedBox(width: 2),
-                                Text(offer['time'], style: TextStyle(fontSize: 11, color: AppTheme.cTextSec)),
-                              ],
-                            )
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.access_time_filled, size: 11, color: AppTheme.cOrange),
+                                  const SizedBox(width: 2),
+                                  Flexible(
+                                    child: Text(
+                                      timeLabel,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 11, color: AppTheme.cTextSec),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         )
                       ],
@@ -394,13 +438,25 @@ class _CustomerFeedScreenState extends State<CustomerFeedScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(biz['name'] ?? 'Restaurant', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain)),
+                      Text(
+                        biz['name']?.toString() ?? 'Restaurant',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.cTextMain),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.star, color: AppTheme.cOrangeLight, size: 10),
                           const SizedBox(width: 4),
-                          Text('${biz['rating']} • ${biz['dist']} • ${biz['cat']}', style: TextStyle(fontSize: 12, color: AppTheme.cTextSec)),
+                          Flexible(
+                            child: Text(
+                              '${biz['rating']} • ${biz['dist']} • ${biz['cat']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 12, color: AppTheme.cTextSec),
+                            ),
+                          ),
                         ],
                       )
                     ],

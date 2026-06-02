@@ -155,12 +155,12 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
                           ),
                         )
                       : GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), 
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 280,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 0.85, 
+                            childAspectRatio: 0.92,
                           ),
                           itemCount: _exploreDeals.length,
                           itemBuilder: (context, index) {
@@ -191,45 +191,44 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 24, offset: const Offset(0, 4))],
+                                  boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 16, offset: const Offset(0, 3))],
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: Container(
-                                        width: double.infinity,
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [Color(0xFFFFF3E0), Color(0xFFF0FDF4)],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                    Container(
+                                      height: 110,
+                                      width: double.infinity,
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [Color(0xFFFFF3E0), Color(0xFFF0FDF4)],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
-                                        child: Stack(
-                                          children: [
-                                            Center(child: Text(emoji, style: const TextStyle(fontSize: 40))),
-                                            Positioned(
-                                              top: 8, left: 8,
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.cOrange,
-                                                  borderRadius: BorderRadius.circular(50),
-                                                ),
-                                                child: Text(
-                                                  discountStr,
-                                                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                                ),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Center(child: Text(emoji, style: const TextStyle(fontSize: 32))),
+                                          Positioned(
+                                            top: 8, left: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.cOrange,
+                                                borderRadius: BorderRadius.circular(50),
                                               ),
-                                            )
-                                          ],
-                                        ),
+                                              child: Text(
+                                                discountStr,
+                                                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          )
+                                        ],
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
@@ -239,14 +238,14 @@ class _CustomerExploreScreenState extends State<CustomerExploreScreen> {
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.cTextMain),
                                           ),
-                                          const SizedBox(height: 2),
+                                          const SizedBox(height: 4),
                                           Text(
                                             rest,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(fontSize: 11, color: AppTheme.cTextSec),
                                           ),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 8),
                                           Text(
                                             '₸$price',
                                             style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.cOrange),

@@ -303,11 +303,11 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 260,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 1.1,
+                          childAspectRatio: 1.25,
                         ),
                         itemCount: currentKpis.length,
                         shrinkWrap: true,
@@ -419,15 +419,15 @@ class _BusinessDashboardScreenState extends State<BusinessDashboardScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 20)),
-            const Spacer(),
+            const SizedBox(height: 16),
             Text(val, style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.bTextMain, height: 1)),
-            const SizedBox(height: 4),
-            Text(lbl, style: const TextStyle(fontSize: 11, color: AppTheme.bTextSec)),
             const SizedBox(height: 6),
+            Text(lbl, style: const TextStyle(fontSize: 11, color: AppTheme.bTextSec)),
+            const SizedBox(height: 8),
             Text(change, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isUp ? AppTheme.bAccentTeal : const Color(0xFFFF6B6B))),
           ],
         ),

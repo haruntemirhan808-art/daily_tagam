@@ -17,6 +17,7 @@ class _BusinessAddDealScreenState extends State<BusinessAddDealScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       Future.delayed(const Duration(seconds: 1), () {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

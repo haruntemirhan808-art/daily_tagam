@@ -14,6 +14,8 @@ import 'presentation/screens/customer/customer_eco_impact_screen.dart';
 import 'presentation/screens/customer/customer_notifications_screen.dart';
 import 'presentation/screens/customer/customer_all_deals_screen.dart';
 import 'presentation/screens/customer/customer_all_restaurants_screen.dart';
+import 'presentation/screens/customer/customer_checkout_screen.dart';
+import 'presentation/screens/customer/customer_payment_confirmation_screen.dart';
 
 // --- BUSINESS SCREENS ---
 import 'presentation/screens/business/business_app_layout.dart';
@@ -52,6 +54,8 @@ class DailyTagamApp extends StatelessWidget {
         '/notifications': (context) => const CustomerNotificationsScreen(),
         '/all-deals': (context) => const CustomerAllDealsScreen(),
         '/all-restaurants': (context) => const CustomerAllRestaurantsScreen(),
+        '/checkout': (context) => const CustomerCheckoutScreen(),
+        '/checkout-success': (context) => const CustomerPaymentConfirmationScreen(),
 
         // --- BUSINESS SIDE ---
         '/biz-dash': (context) => const BusinessAppLayout(),

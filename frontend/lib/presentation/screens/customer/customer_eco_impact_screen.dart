@@ -78,35 +78,46 @@ class _CustomerEcoImpactScreenState extends State<CustomerEcoImpactScreen> {
                   children: [
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(colors: [AppTheme.cGreen, Color(0xFF16A34A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: Column(
                         children: [
-                          const Text('🌍', style: TextStyle(fontSize: 48)),
+                          const Text('🌍', style: TextStyle(fontSize: 40)),
                           const SizedBox(height: 8),
-                          Text('$_wasteSaved', style: GoogleFonts.sora(fontSize: 48, fontWeight: FontWeight.w800, color: Colors.white, height: 1)),
-                          Text('kg of food waste saved', style: TextStyle(fontSize: 16, color: Colors.white.withAlpha(230))),
+                          Text('$_wasteSaved', style: GoogleFonts.sora(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white, height: 1)),
+                          Text('kg of food waste saved', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(230))),
                           const SizedBox(height: 6),
-                          Text('equivalent to saving ${(_wasteSaved / 0.4).round()} meals from landfill', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(200))),
+                          Text('equivalent to saving ${(_wasteSaved / 0.4).round()} meals from landfill', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(200))),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                    GridView.builder(
+                      padding: EdgeInsets.zero,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 180,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.05,
+                      ),
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildEcoStat('🛍️', '$_ordersCount', '', 'Orders placed'),
-                        _buildEcoStat('💨', '7.2', 'kg', 'CO₂ reduced'),
-                        _buildEcoStat('💧', '420', 'L', 'Water saved'),
-                        _buildEcoStat('🌳', '0.8', '', 'Trees equivalent'),
-                      ],
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        switch (index) {
+                          case 0:
+                            return _buildEcoStat('🛍️', '$_ordersCount', '', 'Orders placed');
+                          case 1:
+                            return _buildEcoStat('💨', '7.2', 'kg', 'CO₂ reduced');
+                          case 2:
+                            return _buildEcoStat('💧', '420', 'L', 'Water saved');
+                          default:
+                            return _buildEcoStat('🌳', '0.8', '', 'Trees equivalent');
+                        }
+                      },
                     ),
                     const SizedBox(height: 20),
                     Container(
@@ -131,9 +142,11 @@ class _CustomerEcoImpactScreenState extends State<CustomerEcoImpactScreen> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            spacing: 8,
+                            runSpacing: 6,
+                            children: const [
                               Text('🌱 Seedling', style: TextStyle(fontSize: 11, color: AppTheme.cTextSec)),
                               Text('🌿 Sprout (Current)', style: TextStyle(fontSize: 11, color: AppTheme.cTextSec, fontWeight: FontWeight.bold)),
                               Text('🌳 Tree', style: TextStyle(fontSize: 11, color: AppTheme.cTextSec)),
