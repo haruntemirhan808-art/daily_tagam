@@ -59,7 +59,7 @@ class _AuthScreenState extends State<AuthScreen> {
         if (userRole == 'customer') {
           Navigator.of(context).pushReplacementNamed('/feed');
         } else {
-          Navigator.of(context).pushReplacementNamed('/business-dashboard');
+          Navigator.of(context).pushReplacementNamed('/biz-dash');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
